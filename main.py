@@ -58,14 +58,14 @@ def scan(scan_parameters, model):
     # Add image artifacts
     Artefact = scan_parameters.get('Artefact')
     
-    if Artefact == 'Wrap-around':
-        simulated_image = add_aliasing(signal_array, scan_parameters)       # Wrap around artefact
+    if Artefact == 'Wrap_around':
+        simulated_image = add_aliasing(signal_array, **scan_parameters)       # Wrap around artefact
     if Artefact == 'Chem_shift_1':
-        simulated_image = fat_shift_1(signal_array, scan_parameters)        # Chemical shift of the first kind
+        simulated_image = fat_shift_1(signal_array, **scan_parameters)        # Chemical shift of the first kind
     if Artefact == 'Chem_shift_2':
         simulated_image = fat_shift_2(signal_array, **scan_parameters)      # Chemical shift of the second kind
     if Artefact == 'Chem_shift_1_and_2':
-        simulated_image = fat_shift_1_and_2(signal_array, scan_parameters)  # Chemical shift of the first AND second kind combined
+        simulated_image = fat_shift_1_and_2(signal_array, **scan_parameters)  # Chemical shift of the first AND second kind combined
     if Artefact == None:
         simulated_image = signal_array                                      # No artefacts
     
@@ -120,19 +120,19 @@ def axes_image(model, **scan_parameters):
     
     if plane == 'Transverse':
         plt.figure()
-        plt.imshow(model[:, :, slice_nr], cmap='gray', vmin=0, vmax=1)
+        plt.imshow(model[:, :, slice_nr], cmap='gray',vmin=0,vmax=1)
         plt.title(title)
         plt.show()
         
     elif plane == 'Sagittal':
         plt.figure()
-        plt.imshow(np.rot90(model[:, slice_nr, :], k=3), cmap='gray', vmin=0, vmax=1)
+        plt.imshow(np.rot90(model[:, slice_nr, :], k=3), cmap='gray')
         plt.title(title)
         plt.show()
         
     elif plane == 'Coronal':
         plt.figure()
-        plt.imshow(np.rot90(model[slice_nr, :, :], k=3), cmap='gray', vmin=0, vmax=1)
+        plt.imshow(np.rot90(model[slice_nr, :, :], k=3), cmap='gray')
         plt.title(title)
         plt.show()
         
@@ -234,21 +234,21 @@ def add_aliasing(signal_array, **scan_parameters):
     I_OUT (np.ndarray): The simulated MRI image with a wrap-around artefact (if applicable)'''
     
     # Unpack mandatory scan parameters
-    PE_direction = scan_parameters.get["PE_direction"]
+    PE_direction = scan_parameters.get("PE_direction")
     if PE_direction is None:
         raise ValueError("Please choose a PE direction")
-    plane = scan_parameters["plane"]
+    plane = scan_parameters.get("plane")
     if plane is None:
         raise ValueError("Please choose a plane")
     
     # Unpack optional parameters (based on chosen direction and plane)
-    FOV_unit = scan_parameters.get["FOV_unit", 'Pixels']
-    FOV_AP = scan_parameters.get["FOV_AP", 216]
-    FOV_LR = scan_parameters.get["FOV_LR", 180]
-    FOV_FH = scan_parameters.get["FOV_FH", 180]
-    FOV_center_AP = scan_parameters.get["FOV_center_AP", 108]
-    FOV_center_LR = scan_parameters.get["FOV_center_LR", 90]
-    FOV_center_FH = scan_parameters.get["FOV_center_FH",90]
+    FOV_unit = scan_parameters.get("FOV_unit", 'Pixels')
+    FOV_AP = scan_parameters.get("FOV_AP", 216)
+    FOV_LR = scan_parameters.get("FOV_LR", 180)
+    FOV_FH = scan_parameters.get("FOV_FH", 180)
+    FOV_center_AP = scan_parameters.get("FOV_center_AP", 108)
+    FOV_center_LR = scan_parameters.get("FOV_center_LR", 90)
+    FOV_center_FH = scan_parameters.get("FOV_center_FH",90)
 
     scaling_area = False # Does work, but is not convenient. Needs extra work to see if you can get it working. Can be added to variables later if it works
     
@@ -357,7 +357,7 @@ def add_aliasing(signal_array, **scan_parameters):
 
 
 
-def fat_shift_1(signal_array, scan_parameters):
+def fat_shift_1(signal_array, **scan_parameters):
     '''Simulate a chemical shift artefact of the first kind based on the chosen settings of the simulator. 
     
     Args:
@@ -372,7 +372,6 @@ def fat_shift_1(signal_array, scan_parameters):
     Returns:
         shift (int): will tell you the amount of pixels the fat shifted, based on the chosen settings
         Chemical_shift_2 (np.ndarray): The simulated MRI image with a chemical shift artefact of the first kind'''
-    
     
     # Unpack the scan parameters
     gamma = scan_parameters.get("gyromagnetic ratio", 2.6754*10**8)
@@ -570,27 +569,27 @@ def main():
         
     # Simulate a scan
     scan_parameters = {
-        "TE": 0.014,
+        "TE": 0.033,
         "TR": 0.044,
         "TI": 0.140,
-        "FOV_AP" : 150,
-        "FOV_LR" : 180,
+        "FOV_AP" : 216,
+        "FOV_LR" : 102,
         "FOV_FH" : 180,
         "FOV_center_AP" : 108,
         "FOV_center_LR" : 90,
         "FOV_center_FH" : 90,
         "PE_direction" : 'Horizontal',
-        "FE_direction" : 'Vertical',
-        "plane" : 'Transverse',
-        "slice_nr" : 16,
+        "FE_direction" : 'Horizontal',
+        "plane" : 'Coronal',
+        "slice_nr" : 90,
         "field strength" : 1.5,
-        "in phase" : False,
-        "out of phase" : True,
+        "in phase" : True,
+        "out of phase" : False,
         "bandwidth" : 50*10**3,
         "resolution" : 256,
         "gyromagnetic ratio" : gyro_ratio,
         "WaterFat phantom" : WaterFatShift_phantom,
-        "Artefact" : 'Chem_shift_1'
+        "Artefact" : 'Chem_shift_1_and_2'
         }
         
     # Make sure to select the correct artefact (Wrap_around, Chem_shift_1, Chem_shift_2)
